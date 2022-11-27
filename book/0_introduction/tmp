@@ -1,0 +1,212 @@
+# Définition et structure d'un langage de programmation
+
+## Qu'est-ce qu'un langage ?
+Un langage est une suite de mots, un mot est une suite de symboles appartenant à un alphabet. 
+
+Définissons chaque terme plus précisément :
+
+- Alphabet : ensemble fini *non-vide (possède au moins un élément.)* de symboles
+
+- Mot : suite finie d'éléments d'un alphabet
+
+- Langage : ensemble de mots définis sur un alphabet
+
+> Attention, un symbole n'est pas forcément formé d'un seul caractère.
+
+Exemples de mots :
+
+- On peut former le mot `bac` depuis l'alphabet `Σ = { a, b, c }`
+
+- On peut former le mot `if (true) print("true");` depuis l'alphabet `Σ = { (, ), ;, ", if, true, print,  }`
+
+## Langage naturel vs formel
+Les termes définis précédemment n'ont pas la même signification lorsque l'on parle de langages naturels (parlé par les êtres humains).
+
+On dira donc qu'on peut former la phrase `le chien aboie` (et non le mot) depuis le vocabulaire `{aboie, chien, le}` (et non l'alphabet). Le vocabulaire est l'ensemble des mots `aboie`, `chien` et `le` (et non l'ensemble des symboles).
+
+À la différence des langages naturels, les langages de programmation doivent être formalisés, explicites afin d'être interprétés, exécutés. Un langage de programmation est donc un langage formel.
+
+Je suis conscient que ces notions peuvent être sujet à confusion et à vrai dire, j'aurais pu ne jamais écrire à ce sujet que vous auriez toujours été en mesure de comprendre ce livre. Je pense néanmoins qu'il est important que vous sachiez qu'il existe une réflexion scientifique derrière la notion de langage, libre à vous de l'étudier.
+
+## Compilation vs interprétation
+
+Un langage dit interprété est un langage dont le code source est exécuté par un logiciel tiers appelé moteur ou interpréteur. Ce logiciel est souvent écrit dans un langage dit compilé, par exemple le moteur v8 de chrome est écris en c++ [[1]](#src-1). Les concepts théoriques qui sous-tendent l'implémentation des langages interprétés sont souvent inspirés, voire identiques aux étapes de la compilation, c'est pourquoi il est intéressant de commencer par comprendre ce qu'est une compilation, même superficiellement.
+
+Lors de votre apprentissage, vous avez peut-être appris que la compilation consiste à transformer un langage source en instructions binaires exécutables. Il est vrai que ce type de transformation est un processus de compilation, mais sa définition générale décrit la transformation d'un langage A en un langage B. On dit que le compilateur transforme un code source en un code objet (ou cible)[[2]](#src-2).
+
+Par exemple, dans ce livre, nous allons utiliser TypeScript, qui est un langage compilé. En effet, le compilateur de Typescript va analyser le code source, procéder à une analyse sémantique (principalement la vérification des types) et le compiler en Javascript. Ce type de compilateur est aussi appelé source-to-source compiler, transcompiler ou transpiler en référence au niveau d'abstraction similaire entre le code source et le code objet, mais l'utilisation de ces termes est parfois sujet à débat [[3]](#src-3). Par ailleurs, notez que beaucoup des documentations officielles de ces outils emploient le terme *compilateur* pour les définir[[4]](#src-4) 
+[[5]](#src-5). Ces détails sémantiques n'ont pas telllement d'importance, mais je préfère prévenir toute confusion en amont. 
+
+### Étapes de la compilation
+
+Le processus de compilation est généralement décomposé en plusieurs étapes :
+
+- L'analyse lexicale est l'étape de segmentations du code en tokens : `const x = 4` -> `{const, x, =, 4}`
+    
+    
+- L'analyse syntaxique est l'étape de structuration du programme :
+. `if (;` est validée par l'analyseur lexical, mais sa syntaxe est invalide.
+Dans `{1, +, 2, /, 3}`, faut-il commencer par résoudre l'addition ou la division ?
+
+
+- L'analyse sémantique vérifie que notre programme a du sens :
+```c
+int add(int a, int b)
+{
+    return a + b;
+}
+
+int main()
+{
+    add(2); // error: too few arguments to function ‘add’
+
+    return 0;
+}
+```
+
+- Il peut également y avoir une étape de prétraitement ou preprocessing en anglais, par exemple le traitement des **macros** en c/c++ [[6]](#src-6)
+
+- La génération et l'optimisation de code intermédiaire
+
+- Pour terminer, la génération du code objet
+
+‌
+Dans ce livre, nous nous intéresserons particulièrement aux étapes d'analyse lexicale, syntaxique et sémantique.
+<br>
+<br>
+
+# Analyse lexicale
+
+## Définition
+L'analyse lexicale est le processus consistant à convertir une chaîne de caractère en une suite de tokens. Un token est une suite de caractères représentant une unité lexicale.
+
+#### Exemples d'unités lexicales
+
+| unité                                               | tokens                          |
+|-------------------                                  |-----------                      |
+| Littéraux (string, int, bool...)                    | `"hello"`, `2`, `true`          |
+| Mots-clés                                           | `if`, `while`, `class`          |
+| Opérateurs                                          | `+`, `=`, `>=`, `&&`            |
+| Identifiants (noms de variables, fonctions, etc.)   | `x`, `printf`                   |
+
+Un token a donc un type et une valeur, par exemple `"hello"` est la valeur d'un token de type `literal`.
+
+Afin d'éviter toute confusion lors de vos recherches, gardez à l'esprit cette liste d'équivalences (en-fr) :
+ - analyse lexicale, lexing, segmentation, tokenization
+ - Analyseur lexical, lexer, tokenizer, scanner
+ - token, symbole, lexème, lexeme
+
+> Dans la première partie de ce chapitre (*Qu'est-ce qu'un langage ?*), j'ai préféré l'appelation symbole à token, car il s'agissait de définir un langage de manière générale, mais dans le contexte d'un langage de programmation, token est davantage utilisée.
+
+## Alphabet
+Nous avons vu qu'un alphabet est un ensemble fini non-vide de symboles, c'est-à-dire un ensemble de tokens admissibles. Les tokens peuvent être représentés au moyen d'expression rationnelle (regex).
+
+#### Exemple d'alphabet
+| symbole | regex |
+|------------------- |----------- |
+| Espacements (ignorés) | `^\s+` |
+| Chiffres | `^\d+` |
+| Identifiant | `^(?!\d+)\w+` |
+| Opérateur d'assignation | `^=` |
+| Opérateur d'addition | `^+` |
+| Chaîne de caractères | `^"[^".]*"` |
+
+Les alphabets peuvent contenir des symboles valides mais ignorés lors de l'analyse, ce qui est souvent le cas des commentaires et caractères d'espacement.
+
+#### Exemple de conversion
+
+En se basant sur l'alphabet ci-dessus, on pourrait convertir la chaîne de caractère `x = 2 + 2` en une suite de tokens `(x, =, 2, +, 2)` représentant les unités lexicales suivantes :
+```js
+identifiant : x, 
+operateur   : =, 
+literal     : 2, 
+operateur   : +, 
+literal     : 2
+```
+
+## Lexer
+Le lexer est le programme chargé d'effectuer l'analyse lexicale. Il analyse une chaîne caractère par caractère afin d'en extraire les tokens.
+
+#### Exemple d'extraction de token
+```
+"ab"
+```
+- Le lexer démarre l'analyse
+- détermine que `"` est un caractère valide pour indiquer le début d'une chaîne de caractères.
+- détermine que `a` est un caractère valide dans une chaîne de caractères.
+- détermine que `b` est un caractère valide dans une chaîne de caractères.
+- détermine que `"` est un caractère valide pour indiquer la fin d'une chaîne de caractères.
+
+Le lexer vient de déterminer que `"ab"` est une chaîne de caractère.
+
+#### Exemple d'analyse de chaîne
+```
+myVar| |=| |1| |@:|
+```
+- Le lexer démarre l'analyse.
+- détermine que `myVar` est un identifiant.
+- ignore l'espace.
+- détermine que `=` est un opérateur d'assignement.
+- ignore l'espace.
+- détermine que `1` est un chiffre.
+- ignore l'espace.
+- déclenche une erreur `Invalid token '@'` car aucun token ne commence ou ne peut commencer par `@`.
+
+#### Allons nous vraiment devoir développer un outil d'analyse autant complexe ?
+
+Oui et non.
+
+Nous allons développer un lexer chargé de convertir une chaîne de caractère en une suite de tokens, mais nous n'allons pas développer le programme chargé de résoudre chaque token individuellement. Ce type de programme est ce qu'on appelle automate fini (inite-state automaton ou finite-state machine) et la plupart des langages de haut niveau, dont JavaScript, fournissent déjà un `regex engine` ou moteur d'expression rationnelle. Il nous suffira donc de configurer notre lexer avec des expressions rationnelles.
+
+Exemple de configuration et d'utilisation :
+```ts
+const lexer = new Lexer()
+
+// ignorera les caractères d'espacement
+lexer.addSkipToken('T_WHITE_SPACE', /^\s+/)
+
+// extraira les nombres et opérateurs d'addition/substraction
+lexer.addToken('T_NUMBER', /^\d+/)
+lexer.addToken('T_ADD_SUB', /^[+\-]/)
+
+// initialisation
+lexer.init(' 1 + 2 ')
+
+// récupére les tokens un par un
+const [type, value] = lexer.nextToken() // T_NUMBER  1
+const [type, value] = lexer.nextToken() // T_ADD_SUB +
+const [type, value] = lexer.nextToken() // T_NUMBER  2
+
+// ou récupération d'une liste
+const [
+    [type, value], // T_NUMBER  1
+    [type, value], // T_ADD_SUB +    [type, value]  // T_NUMBER  2
+] = lexer.generateTokenMap(' 1 + 2 ')
+```
+
+### Notes et références
+
+- Solnon Christine. “Théorie Des Langages.” Perso.liris.cnrs.fr, http://perso.citi-lab.fr/csolnon/langages.pdf. Accessed 23 June 2022.
+
+- Demaille Akim et François Yvon. “Théorie des Langages.” lrde.epita.fr, 26 Septembre 2016, https://www.lrde.epita.fr/~akim/thl/lecture-notes/theorie-des-langages-2.pdf. Accessed 18 June 2022.
+
+---
+
+- <a name="src-1">1.</a> 
+“V8 JavaScript Engine.” V8.Dev, https://v8.dev/. Accessed 18 June 2022.
+‌
+- <a name="src-2">2.</a>
+Beal Vangie. “What Is Object Code?” Webopedia, 1 Sept. 1996, https://www.webopedia.com/definitions/object-code/. Accessed 18 June 2022.
+
+- <a name="src-3">3.</a>
+“Compiler Construction - Compiling vs Transpiling.” Stack Overflow, https://stackoverflow.com/questions/44931479/compiling-vs-transpiling. Accessed 18 June 2022.
+‌
+- <a name="src-4">4.</a>
+“Babel · the Compiler for next Generation JavaScript.” Babeljs.io, https://babeljs.io/. Accessed 18 June 2022.
+
+- <a name="src-5">5.</a>
+“Documentation - the Basics, *Tsc , the TypeScript Compiler*.” typescriptlang.org, https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler. Accessed 18 June 2022.
+
+- <a name="src-6">6.</a>
+“Preprocessor - Cppreference.com.” En.cppreference.com, https://en.cppreference.com/w/cpp/preprocessor. Accessed 23 June 2022.
+‌
